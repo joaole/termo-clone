@@ -143,7 +143,6 @@ export function getRandomWord() {
 ```
 
 ---
-# AQUI
 #### ✅ `components/Tile.tsx` (cada letra/quadrado)
 
 ```tsx
@@ -206,7 +205,7 @@ export default function Keyboard({ onKeyPress }: Props) {
 ```
 
 ---
-
+# AQUI
 #### ✅ `components/Board.tsx` (grid principal)
 
 ```tsx
