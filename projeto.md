@@ -205,7 +205,7 @@ export default function Keyboard({ onKeyPress }: Props) {
 ```
 
 ---
-# AQUI
+
 #### ✅ `components/Board.tsx` (grid principal)
 
 ```tsx
