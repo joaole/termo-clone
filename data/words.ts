@@ -6419,6 +6419,8 @@ export const WORD_LIST = [
     "úrico",
     "úteis",
     "útero",
+    "laudo",
+    "times",
 ];
 
 export const isValidWord = (word: string) => {
