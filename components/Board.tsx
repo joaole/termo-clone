@@ -11,16 +11,56 @@ const COLS = 5;
 export default function Board({ answer }: { answer: string }) {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string>("");
+  const [usedKeys, setUsedKeys] = useState<
+    Record<string, "correct" | "present" | "absent">
+  >({});
+  const [message, setMessage] = useState<string>("");
+  const [finished, setFinished] = useState<boolean>(false);
+
+  const updateUsedKeys = (guess: string, answer: string) => {
+    const updated = { ...usedKeys };
+    const answerArr = answer.toUpperCase().split("");
+
+    guess
+      .toUpperCase()
+      .split("")
+      .forEach((letter, index) => {
+        if (letter === answerArr[index]) {
+          updated[letter] = "correct";
+        } else if (answerArr.includes(letter)) {
+          if (updated[letter] !== "correct") {
+            updated[letter] = "present";
+          }
+        } else {
+          if (!updated[letter]) {
+            updated[letter] = "absent";
+          }
+        }
+      });
+
+    setUsedKeys(updated);
+  };
 
   const handleKeyPress = (key: string) => {
-    if (guesses.length >= ROWS) return;
+    if (finished) return;
 
     if (key === "Enter") {
       if (
         currentGuess.length === COLS &&
         isValidWord(currentGuess.toLowerCase())
       ) {
-        setGuesses([...guesses, currentGuess]);
+        const newGuesses = [...guesses, currentGuess];
+        setGuesses(newGuesses);
+        updateUsedKeys(currentGuess, answer);
+
+        if (answer.toUpperCase() === currentGuess.toUpperCase()) {
+          setMessage("🎉 Congratulations! You guessed the word!");
+          setFinished(true);
+        } else if (newGuesses.length === ROWS) {
+          setMessage(`❌ Game Over! The word was ${answer.toUpperCase()}.`);
+          setFinished(true);
+        }
+
         setCurrentGuess("");
       }
     } else if (key === "Backspace") {
@@ -39,8 +79,7 @@ export default function Board({ answer }: { answer: string }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentGuess, guesses]);
+  }, [currentGuess, guesses, finished]);
 
   const getStatus = (letter: string, index: number, target: string) => {
     if (letter === target[index]) return "correct";
@@ -63,15 +102,25 @@ export default function Board({ answer }: { answer: string }) {
                   guesses[rowIndex] && letter
                     ? getStatus(letter, colIndex, answer.toUpperCase())
                     : undefined;
-                return (
-                  <Title key={colIndex} letter={letter || ""} status={status} />
-                );
+                return <Title key={colIndex} letter={letter} status={status} />;
               })}
             </div>
           );
         })}
       </div>
-      <Keyboard onKeyPress={handleKeyPress} />
+      <Keyboard onKeyPress={handleKeyPress} usedKeys={usedKeys} />
+      {message && (
+        <div className="mt-4 text-lg font-semibold text-center">
+          {message}
+          <button
+            onClick={() => window.location.reload()}
+            className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Play Again
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+// This code defines a word-guessing game board component. It manages the state of guesses, current input, and keyboard interactions. The component updates the used keys based on the player's guesses and provides feedback on the game status. The player can input letters, submit guesses, and see the results visually. The game ends when the player either guesses the word correctly or exhausts all attempts.
