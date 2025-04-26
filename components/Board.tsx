@@ -79,6 +79,7 @@ export default function Board({ answer }: { answer: string }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentGuess, guesses, finished]);
 
   const getStatus = (letter: string, index: number, target: string) => {
