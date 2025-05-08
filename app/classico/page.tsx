@@ -1,7 +1,7 @@
 "use client";
 
 import { getRandomWord } from "@/utils/word-utils";
-import Board from "@/components/Board";
+import Board from "@/components/game/Board";
 import { useState, useEffect } from "react";
 
 export default function ClassicoPage() {
