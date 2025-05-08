@@ -5,10 +5,14 @@ import Title from "./Title";
 import Keyboard from "./Keyboard";
 import { isValidWord } from "@/data/words";
 
-const ROWS = 6;
-const COLS = 5;
+type BoardProps = {
+  answers: string[];
+  ROWS: number;
+};
 
-export default function Board({ answer }: { answer: string }) {
+const COLS = 5; // Número de colunas (letras) por linha
+
+export default function Board({ answers, ROWS }: BoardProps) {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string>("");
   const [usedKeys, setUsedKeys] = useState<
@@ -17,26 +21,30 @@ export default function Board({ answer }: { answer: string }) {
   const [message, setMessage] = useState<string>("");
   const [finished, setFinished] = useState<boolean>(false);
 
-  const updateUsedKeys = (guess: string, answer: string) => {
+  const updateUsedKeys = (guess: string) => {
     const updated = { ...usedKeys };
-    const answerArr = answer.toUpperCase().split("");
 
-    guess
-      .toUpperCase()
-      .split("")
-      .forEach((letter, index) => {
-        if (letter === answerArr[index]) {
-          updated[letter] = "correct";
-        } else if (answerArr.includes(letter)) {
-          if (updated[letter] !== "correct") {
-            updated[letter] = "present";
+    // Iterar sobre todas as respostas para marcar as letras
+    answers.forEach((answer) => {
+      const answerArr = answer.toUpperCase().split("");
+
+      guess
+        .toUpperCase()
+        .split("")
+        .forEach((letter, index) => {
+          if (letter === answerArr[index]) {
+            updated[letter] = "correct";
+          } else if (answerArr.includes(letter)) {
+            if (updated[letter] !== "correct") {
+              updated[letter] = "present";
+            }
+          } else {
+            if (!updated[letter]) {
+              updated[letter] = "absent";
+            }
           }
-        } else {
-          if (!updated[letter]) {
-            updated[letter] = "absent";
-          }
-        }
-      });
+        });
+    });
 
     setUsedKeys(updated);
   };
@@ -51,13 +59,22 @@ export default function Board({ answer }: { answer: string }) {
       ) {
         const newGuesses = [...guesses, currentGuess];
         setGuesses(newGuesses);
-        updateUsedKeys(currentGuess, answer);
+        updateUsedKeys(currentGuess);
 
-        if (answer.toUpperCase() === currentGuess.toUpperCase()) {
-          setMessage("🎉 Congratulations! You guessed the word!");
+        // Verificar se o palpite está correto para qualquer uma das respostas
+        const isCorrect = answers.some(
+          (answer) => answer.toUpperCase() === currentGuess.toUpperCase()
+        );
+
+        if (isCorrect) {
+          setMessage("🎉 Congratulations! You guessed one of the words!");
           setFinished(true);
         } else if (newGuesses.length === ROWS) {
-          setMessage(`❌ Game Over! The word was ${answer.toUpperCase()}.`);
+          setMessage(
+            `❌ Game Over! The words were: ${answers
+              .map((a) => a.toUpperCase())
+              .join(", ")}.`
+          );
           setFinished(true);
         }
 
@@ -79,12 +96,20 @@ export default function Board({ answer }: { answer: string }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentGuess, guesses, finished]);
 
-  const getStatus = (letter: string, index: number, target: string) => {
-    if (letter === target[index]) return "correct";
-    if (target.includes(letter)) return "present";
+  const getStatus = (letter: string, index: number) => {
+    // Verificar se a letra está correta para qualquer uma das respostas
+    const statuses = answers.map((answer) => {
+      if (letter === answer.toUpperCase()[index]) return "correct";
+      if (answer.toUpperCase().includes(letter)) return "present";
+      return "absent";
+    });
+
+    // Prioridade: "correct" > "present" > "absent"
+    if (statuses.includes("correct")) return "correct";
+    if (statuses.includes("present")) return "present";
     return "absent";
   };
 
@@ -101,7 +126,7 @@ export default function Board({ answer }: { answer: string }) {
                 const letter = guess[colIndex] || "";
                 const status =
                   guesses[rowIndex] && letter
-                    ? getStatus(letter, colIndex, answer.toUpperCase())
+                    ? getStatus(letter, colIndex)
                     : undefined;
                 return <Title key={colIndex} letter={letter} status={status} />;
               })}
@@ -124,4 +149,3 @@ export default function Board({ answer }: { answer: string }) {
     </div>
   );
 }
-// This code defines a word-guessing game board component. It manages the state of guesses, current input, and keyboard interactions. The component updates the used keys based on the player's guesses and provides feedback on the game status. The player can input letters, submit guesses, and see the results visually. The game ends when the player either guesses the word correctly or exhausts all attempts.
